@@ -1,0 +1,2056 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Property Portal — Payments Subledger (Demo)</title>
+  <style>
+    :root{
+      /* Planet-ish light theme */
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --text:#0b1220;
+      --muted:#667085;
+      --line:#e6e8ef;
+      --brand:#6d28d9;
+      --brand2:#8b5cf6;
+      --good:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+      --info:#2563eb;
+      --shadow: 0 10px 30px rgba(16,24,40,.08);
+      --radius: 14px;
+      --radius2: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --focus: 0 0 0 4px rgba(109,40,217,.16);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--sans); color:var(--text); background: var(--bg);}
+    a{color:inherit}
+    button, input, select{font:inherit}
+
+    .app{min-height:100%; display:flex; flex-direction:column}
+
+    /* Top Nav */
+    .topbar{position:sticky; top:0; z-index:50; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);} 
+    .topbar-inner{max-width: 1320px; margin: 0 auto; padding: 14px 16px; display:flex; align-items:center; gap:14px;}
+
+    .brand{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;}
+    .brand .icon{width:22px;height:22px;border-radius:6px; background: linear-gradient(135deg, var(--brand), var(--brand2)); box-shadow: 0 10px 22px rgba(109,40,217,.14);} 
+    .brand strong{letter-spacing:.2px}
+
+    .tabs{flex:1; display:flex; justify-content:center; gap:18px; flex-wrap:wrap;}
+    .tab{position:relative; text-decoration:none; padding: 10px 8px; font-size:13px; color: rgba(102,112,133,.95); border-radius: 10px;}
+    .tab:hover{background: rgba(109,40,217,.06); color: rgba(11,18,32,.92)}
+    .tab.active{color: rgba(11,18,32,.95);}
+    .tab.active::after{content:""; position:absolute; left:8px; right:8px; bottom:2px; height:2px; background: var(--brand); border-radius: 2px;}
+
+    .right{display:flex; align-items:center; gap:10px;}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding: 8px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font-size:12px; white-space:nowrap; box-shadow: 0 6px 18px rgba(16,24,40,.04)}
+    .pill button{background:transparent; border:0; color: var(--text); cursor:pointer; padding:0;}
+
+    .avatar{width:34px;height:34px;border-radius:999px; display:grid; place-items:center;
+      background: rgba(109,40,217,.12); color: rgba(109,40,217,.95); border: 1px solid rgba(109,40,217,.18); font-weight:800; font-size:12px;}
+
+    /* Layout */
+    .shell{max-width:1320px; margin:0 auto; padding: 18px 16px 28px; width:100%;}
+
+    .page-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; padding: 18px 2px 8px;}
+    .title{display:flex; flex-direction:column; gap:6px;}
+    .title h1{margin:0; font-size:22px; letter-spacing:.2px}
+    .title p{margin:0; font-size:13px; color: var(--muted)}
+
+    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
+
+    .btn{display:inline-flex; align-items:center; gap:8px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--text); cursor:pointer; font-size:13px; box-shadow: 0 6px 18px rgba(16,24,40,.04);}
+    .btn:hover{border-color: rgba(109,40,217,.28)}
+    .btn.primary{border-color: rgba(109,40,217,.35); background: rgba(109,40,217,.10);}
+    .btn.danger{border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.06);}
+    .btn:focus{outline:none; box-shadow: var(--focus)}
+
+    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap:12px;}
+    .card{grid-column: span 3; background: #fff; border: 1px solid var(--line); border-radius: var(--radius2); padding: 14px; box-shadow: var(--shadow);}
+    .card .k{font-size:12px; color: var(--muted)}
+    .card .v{margin-top:8px; font-size:22px; font-weight:900; letter-spacing:.2px}
+    .card .s{margin-top:6px; font-size:12px; color: rgba(102,112,133,.85)}
+    .card .row{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-top:8px;}
+
+    .wide{grid-column: span 12;}
+    .span6{grid-column: span 6;}
+    .span8{grid-column: span 8;}
+    .span4{grid-column: span 4;}
+
+    @media (max-width: 1100px){.card{grid-column: span 6}.span8{grid-column: span 12}.span4{grid-column: span 12}}
+    @media (max-width: 680px){.card{grid-column: span 12}}
+
+    /* Alerts */
+    .alert{border-radius: 14px; border:1px solid var(--line); background:#fff; padding: 12px 14px; display:flex; gap:10px; align-items:flex-start; box-shadow: 0 10px 26px rgba(16,24,40,.06)}
+    .alert .dot{width:10px;height:10px;border-radius:999px; margin-top:4px; background: var(--info)}
+    .alert.warn .dot{background: var(--warn)}
+    .alert.bad .dot{background: var(--bad)}
+    .alert .t{font-weight:800; font-size:13px}
+    .alert .d{font-size:12px; color: var(--muted); margin-top:4px}
+
+    /* Controls */
+    .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding: 10px 0 14px;}
+    .field{display:flex; gap:8px; align-items:center; padding: 9px 10px; border-radius: 12px; background: #fff; border: 1px solid var(--line); color: var(--muted); font-size:12px; box-shadow: 0 6px 18px rgba(16,24,40,.03);} 
+    .field label{color: rgba(102,112,133,.95)}
+    .field select, .field input{background:transparent; border:0; outline:none; color: var(--text); font-size:12px;}
+    .field input{width: 240px}
+
+    /* Table */
+    .table{background:#fff; border: 1px solid var(--line); border-radius: var(--radius2); box-shadow: var(--shadow); overflow:hidden;}
+    .table-top{padding: 12px 14px; border-bottom: 1px solid var(--line); display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; background: rgba(248,250,252,.72)}
+    .meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .tag{display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 999px; background: rgba(109,40,217,.08); border: 1px solid rgba(109,40,217,.14); color: rgba(11,18,32,.92); font-size:11px;}
+
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    thead th{position:sticky; top:0; background: #fff; border-bottom: 1px solid var(--line); color: rgba(102,112,133,.95); font-size:11px; text-align:left; padding: 10px 12px; white-space:nowrap;}
+    tbody td{border-bottom: 1px solid rgba(230,232,239,.9); padding: 10px 12px; font-size:12px; vertical-align:middle; color: rgba(11,18,32,.92)}
+    tbody tr{cursor:pointer; background: rgba(255,255,255,.9)}
+    tbody tr:hover{background: rgba(109,40,217,.05)}
+
+    .status{display:inline-flex; align-items:center; gap:8px; padding: 5px 8px; border-radius: 999px; font-size:11px; border:1px solid rgba(230,232,239,.9); background: rgba(242,244,247,.95);} 
+    .st-good{background: rgba(22,163,74,.10); border-color: rgba(22,163,74,.18)}
+    .st-warn{background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.20)}
+    .st-bad{background: rgba(220,38,38,.10); border-color: rgba(220,38,38,.20)}
+    .st-info{background: rgba(37,99,235,.10); border-color: rgba(37,99,235,.20)}
+
+    .mono{font-family: var(--mono)}
+    .muted{color: var(--muted)}
+
+    /* Drawer */
+    .backdrop{position:fixed; inset:0; background: rgba(16,24,40,.34); display:none; z-index: 80;}
+    .backdrop.show{display:block}
+
+    .drawer{position:fixed; top:0; right:0; height:100%; width: 560px; max-width: 92vw; background: rgba(255,255,255,.98); border-left:1px solid var(--line); box-shadow: -10px 0 40px rgba(16,24,40,.16);
+      transform: translateX(105%); transition: transform .22s ease; z-index: 90; display:flex; flex-direction:column;}
+    .drawer.open{transform: translateX(0)}
+    .drawer-head{padding: 14px; border-bottom: 1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; background: rgba(248,250,252,.9)}
+    .drawer-head h2{margin:0; font-size:14px}
+    .drawer-head .sub{margin-top:6px; font-size:12px; color: var(--muted)}
+    .drawer-body{padding: 12px 14px; overflow:auto; display:flex; flex-direction:column; gap:12px}
+
+    .section{border: 1px solid var(--line); border-radius: var(--radius); background: #fff; overflow:hidden; box-shadow: 0 10px 26px rgba(16,24,40,.06)}
+    .section .sh{padding: 10px 12px; border-bottom: 1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .section .sh strong{font-size:12px}
+    .section .sb{padding: 10px 12px; font-size:12px; color: rgba(11,18,32,.92)}
+
+    .kv{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .kv .item{padding: 8px 10px; border-radius: 12px; background: rgba(248,250,252,.9); border:1px solid var(--line)}
+    .kv .item .k{font-size:11px; color: var(--muted)}
+    .kv .item .v{margin-top:6px; font-size:12px; font-family: var(--mono)}
+
+    /* Modal */
+    .modal{position:fixed; left:50%; top:50%; transform: translate(-50%, -50%); width: 680px; max-width: 94vw;
+      background: rgba(255,255,255,.98); border:1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); display:none; z-index: 100; overflow:hidden;}
+    .modal.show{display:block}
+    .mh{padding: 12px 14px; border-bottom:1px solid var(--line); background: rgba(248,250,252,.9); display:flex; align-items:center; justify-content:space-between}
+    .mh strong{font-size:13px}
+    .mb{padding: 14px; display:flex; flex-direction:column; gap:12px}
+    .foot{padding: 12px 14px; border-top:1px solid var(--line); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap}
+
+    .waterfall{display:flex; flex-direction:column; gap:10px}
+    .wf-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 10px 12px; border:1px solid var(--line); border-radius: 14px; background: rgba(248,250,252,.75)}
+    .wf-row .l{display:flex; flex-direction:column; gap:4px}
+    .wf-row .l strong{font-size:12px}
+    .wf-row .l span{font-size:11px; color: var(--muted)}
+    .wf-row .r{font-family: var(--mono); font-size:12px; font-weight:800}
+
+    /* Toast */
+    .toast{position:fixed; left:50%; bottom:16px; transform: translateX(-50%); background: rgba(255,255,255,.98); border:1px solid var(--line); color: rgba(11,18,32,.92);
+      padding: 10px 12px; border-radius: 14px; display:none; gap:10px; align-items:center; z-index: 120; box-shadow: var(--shadow); max-width: 92vw;}
+    .toast.show{display:flex}
+    .toast .msg{font-size:13px; color: rgba(11,18,32,.92)}
+    .toast .x{background:transparent;border:0;color:var(--muted);cursor:pointer}
+
+    /* Small helpers */
+    .split{display:flex; gap:12px; flex-wrap:wrap}
+    .split > *{flex:1; min-width: 260px}
+    .hint{font-size:12px; color: var(--muted)}
+    .link{color: rgba(109,40,217,.98); text-decoration:none; font-weight:700}
+    .link:hover{text-decoration:underline}
+    .hr{height:1px; background: var(--line); margin: 10px 0}
+
+    .empty{padding: 20px; text-align:center; color: var(--muted)}
+    .empty strong{display:block; color: rgba(11,18,32,.92); margin-bottom:6px}
+
+    /* A11y */
+    .sr-only{position:absolute; width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar" role="banner">
+      <div class="topbar-inner">
+        <div class="brand" role="button" tabindex="0" aria-label="Go to Dashboard" id="brandBtn">
+          <div class="icon" aria-hidden="true"></div>
+          <strong>PROPERTY PORTAL</strong>
+        </div>
+
+        <nav class="tabs" aria-label="Primary navigation" id="tabs"></nav>
+
+        <div class="right">
+          <div class="pill" title="Currency">
+            <span class="muted">Currency</span>
+            <button id="ccyToggle" aria-label="Toggle currency">USD</button>
+          </div>
+          <div class="pill" title="Property">
+            <span class="muted">Property</span>
+            <button id="propToggle" aria-label="Toggle property">All</button>
+          </div>
+          <div class="avatar" aria-label="Current user">RH</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell" role="main">
+      <div class="page-head">
+        <div class="title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">A clear view of how much you’re getting, and when.</p>
+        </div>
+        <div class="actions" id="pageActions"></div>
+      </div>
+
+      <div id="pageRoot"></div>
+    </main>
+
+    <!-- Drawer + modal + toast -->
+    <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+
+    <aside class="drawer" id="drawer" aria-label="Details drawer">
+      <div class="drawer-head">
+        <div>
+          <h2 id="drawerTitle">Details</h2>
+          <div class="sub" id="drawerSub">Reservation-first summary and breakdown.</div>
+        </div>
+        <button class="btn" id="drawerClose" aria-label="Close details">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </aside>
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Modal">
+      <div class="mh">
+        <strong id="modalTitle">Explain this payout</strong>
+        <button class="btn" id="modalClose" aria-label="Close modal">✕</button>
+      </div>
+      <div class="mb" id="modalBody"></div>
+      <div class="foot" id="modalFoot"></div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <div class="msg" id="toastMsg">Saved.</div>
+      <button class="x" id="toastClose" aria-label="Dismiss">✕</button>
+    </div>
+  </div>
+
+  <script>
+    /*************
+     * Property-facing Subledger Demo
+     * - Plain English labels
+     * - Booking-first context on every row
+     * - Progressive disclosure (drawer + "Explain this payout")
+     * - Tables first, light summaries on top
+     *************/
+
+    const state = {
+      page: 'dashboard',
+      currency: 'USD',
+      property: 'All',
+      query: '',
+      filters: {},
+      selected: null,
+    };
+
+    const PAGES = [
+      {id:'dashboard', label:'Dashboard'},
+      {id:'transactions', label:'Transactions'},
+      {id:'payouts', label:'Payouts'},
+      {id:'disputes', label:'Disputes & Refunds'},
+      {id:'fees', label:'Fees & Adjustments'},
+      {id:'reports', label:'Reports'},
+      {id:'settings', label:'Settings'}
+    ];
+
+    // --- Sample data (matches provided data model) ---
+    const properties = [
+      {id:'all', name:'All'},
+      {id:'IBIS-LON', name:'Ibis London'},
+      {id:'SCANDIC-BER', name:'Scandic Berlin'},
+      {id:'CP-PAR', name:'Crowne Plaza Paris'},
+      {id:'HI-ROM', name:'Holiday Inn Rome'},
+    ];
+
+    const transactions = [
+      // Payments
+      tx({id:'TRX123456789', created_at:'2026-03-02T14:30:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:325.40, fees_total:6.42, net_amount:318.98, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:'PO-8472910', brand_channel:'Brand.com', property_id:'IBIS-LON'}),
+      tx({id:'TRX123456776', created_at:'2026-03-02T11:10:00Z', type:'payment', status:'pending', currency:'USD', gross_amount:228.50, fees_total:0.00, net_amount:228.50, payment_method:'Visa •••• 1111', reservation_id:'RES-884215', guest_name:'Ava R***', stay_start_date:'2026-03-20', stay_end_date:'2026-03-22', payout_id:null, brand_channel:'Call Centre', property_id:'CP-PAR'}),
+      tx({id:'TRX123767865', created_at:'2026-03-01T09:45:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:79.90, fees_total:1.82, net_amount:78.08, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472909', brand_channel:'OTA', property_id:'SCANDIC-BER'}),
+      tx({id:'TRX124587210', created_at:'2026-03-01T08:00:00Z', type:'payment', status:'pending', currency:'USD', gross_amount:522.00, fees_total:0.00, net_amount:522.00, payment_method:'Amex •••• 1005', reservation_id:'RES-884000', guest_name:'Sam K***', stay_start_date:'2026-03-05', stay_end_date:'2026-03-06', payout_id:null, brand_channel:'Brand.com', property_id:'IBIS-LON'}),
+
+      // Refunds
+      tx({id:'RFD-99812', created_at:'2026-03-01T10:05:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-79.90, fees_total:0.00, net_amount:-79.90, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472910', brand_channel:null, property_id:'SCANDIC-BER', refund_initiator:'Property', refund_reason:'Customer request'}),
+      tx({id:'RFD-99811', created_at:'2026-02-28T23:10:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-450.00, fees_total:0.00, net_amount:-450.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883850', guest_name:'Zoe L***', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'IBIS-LON', refund_initiator:'Brand', refund_reason:'Cancellation'}),
+
+      // Disputes
+      tx({id:'CBK-55421', created_at:'2026-03-01T08:00:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-1500.00, fees_total:25.00, net_amount:-1525.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883700', guest_name:'Liam P***', stay_start_date:'2026-02-12', stay_end_date:'2026-02-14', payout_id:null, brand_channel:null, property_id:'IBIS-LON'}),
+      tx({id:'CBK-60011', created_at:'2026-02-27T15:20:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-189.00, fees_total:25.00, net_amount:-214.00, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:null, brand_channel:null, property_id:'IBIS-LON'}),
+
+      // Adjustments
+      tx({id:'ADJ-7712', created_at:'2026-03-02T09:15:00Z', type:'adjustment', status:'paid', currency:'USD', gross_amount:-12.00, fees_total:0.00, net_amount:-12.00, payment_method:'—', reservation_id:'RES-883500', guest_name:'Batch adj.', stay_start_date:'2026-02-28', stay_end_date:'2026-02-28', payout_id:'PO-8472910', brand_channel:null, property_id:'CP-PAR', adjustment_reason:'Manual correction'}),
+      tx({id:'ADJ-9091', created_at:'2026-02-26T16:45:00Z', type:'adjustment', status:'paid', currency:'USD', gross_amount:15.00, fees_total:0.00, net_amount:15.00, payment_method:'—', reservation_id:'RES-883850', guest_name:'Fee refund', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'IBIS-LON', adjustment_reason:'Fee reversal'}),
+
+      // EUR sample
+      tx({id:'TRX-EU-998100', created_at:'2026-03-01T12:11:00Z', type:'payment', status:'paid', currency:'EUR', gross_amount:189.00, fees_total:3.98, net_amount:185.02, payment_method:'Visa •••• 4242', reservation_id:'RES-990100', guest_name:'J*** D***', stay_start_date:'2026-03-10', stay_end_date:'2026-03-12', payout_id:'PO-EUR-10021', brand_channel:'Brand.com', property_id:'HI-ROM'}),
+    ];
+
+    const payouts = [
+      payout({id:'PO-8472910', payout_date:'2026-03-04', currency:'USD', gross_collected:125000.00, refunds_total:2950.00, chargebacks_total:1500.00, fees_total:3200.00, adjustments_total:-500.00, net_payout:124500.00, status:'upcoming', title:'Payout for 1–3 Mar stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3301'}),
+      payout({id:'PO-8472909', payout_date:'2026-02-28', currency:'USD', gross_collected:85000.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:0.00, net_payout:85000.00, status:'paid', title:'Payout for 24–28 Feb stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3290'}),
+      payout({id:'PO-8472850', payout_date:'2026-02-26', currency:'USD', gross_collected:42500.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:-2500.00, net_payout:40000.00, status:'failed', title:'Payout for 20–23 Feb stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3277'}),
+      payout({id:'PO-ONHOLD-1002', payout_date:'2026-03-06', currency:'USD', gross_collected:22000.00, refunds_total:0.00, chargebacks_total:189.00, fees_total:420.00, adjustments_total:0.00, net_payout:21391.00, status:'on_hold', title:'Payout for 2–5 Mar stays', property_id:'CP-PAR', bank_ref:'—'}),
+
+      payout({id:'PO-EUR-10021', payout_date:'2026-03-02', currency:'EUR', gross_collected:400359.00, refunds_total:1200.00, chargebacks_total:900.00, fees_total:10421.00, adjustments_total:0.00, net_payout:400359.00, status:'paid', title:'Payout for 28 Feb–1 Mar stays', property_id:'HI-ROM', bank_ref:'SEPA-REF-3301'}),
+    ];
+
+    const disputes = [
+      {id:'DSP-10001', transaction_id:'CBK-55421', amount:1500.00, currency:'USD', status:'open', reason_code:'FRAUD', reason_text:'Cardholder says they did not make this booking.', evidence_due_date:'2026-03-05', fee_amount:25.00},
+      {id:'DSP-10002', transaction_id:'CBK-60011', amount:189.00, currency:'USD', status:'open', reason_code:'FRAUD', reason_text:'Cardholder says this payment is not recognised.', evidence_due_date:'2026-03-06', fee_amount:25.00},
+      {id:'DSP-09990', transaction_id:'CBK-50010', amount:320.00, currency:'USD', status:'won', reason_code:'SNP', reason_text:'Cardholder claims service was not provided.', evidence_due_date:'—', fee_amount:0.00},
+      {id:'DSP-09980', transaction_id:'CBK-49901', amount:220.00, currency:'USD', status:'lost', reason_code:'DUP', reason_text:'Cardholder claims they were charged twice.', evidence_due_date:'—', fee_amount:25.00},
+    ];
+
+    const feeLines = [
+      // Transaction-level fees
+      fee({id:'FEE-1001', transaction_id:'TRX123456789', payout_id:null, category:'processing', description:'Card processing fee', amount:4.85, currency:'USD'}),
+      fee({id:'FEE-1002', transaction_id:'TRX123456789', payout_id:null, category:'brand', description:'Brand service fee', amount:1.57, currency:'USD'}),
+      fee({id:'FEE-2001', transaction_id:'TRX123767865', payout_id:null, category:'processing', description:'Card processing fee', amount:1.40, currency:'USD'}),
+      fee({id:'FEE-2002', transaction_id:'TRX123767865', payout_id:null, category:'brand', description:'Brand service fee', amount:0.42, currency:'USD'}),
+      // Dispute fees
+      fee({id:'FEE-3001', transaction_id:'CBK-55421', payout_id:null, category:'chargeback', description:'Chargeback handling fee', amount:25.00, currency:'USD'}),
+      fee({id:'FEE-3002', transaction_id:'CBK-60011', payout_id:null, category:'chargeback', description:'Chargeback handling fee', amount:25.00, currency:'USD'}),
+      // Payout-level rollups
+      fee({id:'FEE-P-1', transaction_id:null, payout_id:'PO-8472910', category:'processing', description:'Processing fees (total)', amount:2480.00, currency:'USD'}),
+      fee({id:'FEE-P-2', transaction_id:null, payout_id:'PO-8472910', category:'brand', description:'Brand service fees (total)', amount:720.00, currency:'USD'}),
+      fee({id:'FEE-P-3', transaction_id:null, payout_id:'PO-8472910', category:'chargeback', description:'Chargeback fees (total)', amount:25.00, currency:'USD'}),
+      fee({id:'FEE-P-4', transaction_id:null, payout_id:'PO-8472910', category:'adjustment', description:'Manual adjustments (total)', amount:-500.00, currency:'USD'}),
+    ];
+
+    // --- Utilities ---
+    const el = (id)=>document.getElementById(id);
+    const fmtMoney = (n, ccy)=>{
+      const sign = n < 0 ? '-' : '';
+      const abs = Math.abs(n);
+      const symbol = (ccy==='EUR') ? '€' : (ccy==='GBP') ? '£' : '$';
+      return `${sign}${symbol}${abs.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    };
+    const fmtDate = (iso)=>{
+      if(!iso || iso==='—') return '—';
+      const d = new Date(iso);
+      if(String(d)==='Invalid Date') return iso;
+      return d.toISOString().slice(0,10);
+    };
+    const fmtDateTime = (iso)=>{
+      if(!iso || iso==='—') return '—';
+      const d = new Date(iso);
+      if(String(d)==='Invalid Date') return iso;
+      return `${d.toISOString().slice(0,10)} ${d.toISOString().slice(11,16)} UTC`;
+    };
+    const escapeHtml = (s)=>String(s)
+      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+      .replaceAll('"','&quot;').replaceAll("'",'&#039;');
+
+    function tx(o){
+      return {
+        ...o,
+        // derived plain labels
+        property_name: (properties.find(p=>p.id===o.property_id)?.name) || '—',
+      };
+    }
+    function payout(o){
+      return {
+        ...o,
+        property_name: (properties.find(p=>p.id===o.property_id)?.name) || '—',
+      };
+    }
+    function fee(o){ return {...o}; }
+
+    function statusChip(status){
+      const map = {
+        paid: {t:'Paid', cls:'st-good'},
+        pending: {t:'Pending', cls:'st-info'},
+        refunded: {t:'Refunded', cls:'st-warn'},
+        disputed: {t:'Disputed', cls:'st-bad'},
+        upcoming: {t:'Upcoming', cls:'st-info'},
+        failed: {t:'Failed', cls:'st-bad'},
+        on_hold: {t:'On hold', cls:'st-warn'},
+        open: {t:'Open', cls:'st-warn'},
+        won: {t:'Won', cls:'st-good'},
+        lost: {t:'Lost', cls:'st-bad'},
+      };
+      const v = map[status] || {t: status, cls:''};
+      return `<span class="status ${v.cls}">${escapeHtml(v.t)}</span>`;
+    }
+
+    function currentPropertyFilter(){
+      if(state.property==='All') return null;
+      const p = properties.find(x=>x.name===state.property);
+      return p?.id || null;
+    }
+
+    function dataForContext(){
+      const ccy = state.currency;
+      const propId = currentPropertyFilter();
+
+      const txs = transactions.filter(t => t.currency===ccy && (!propId || t.property_id===propId));
+      const pays = payouts.filter(p => p.currency===ccy && (!propId || p.property_id===propId));
+      const dsps = disputes
+        .map(d => ({...d, tx: transactions.find(t=>t.id===d.transaction_id)}))
+        .filter(d => (d.currency===ccy) && (!propId || d.tx?.property_id===propId));
+      const fees = feeLines.filter(f => f.currency===ccy);
+      return {ccy, propId, txs, pays, dsps, fees};
+    }
+
+    function computeDashboard(){
+      const {ccy, txs, pays, dsps} = dataForContext();
+
+      const upcoming = pays
+        .filter(p => p.status==='upcoming' || p.status==='on_hold' || p.status==='failed')
+        .sort((a,b)=>a.payout_date.localeCompare(b.payout_date));
+
+      const next = upcoming.find(p=>p.status==='upcoming') || upcoming[0] || null;
+      const lastPaid = pays
+        .filter(p => p.status==='paid')
+        .sort((a,b)=>b.payout_date.localeCompare(a.payout_date))[0] || null;
+
+      // Pending balance: sum of net_amount where pending or not yet in payout
+      const available = txs
+        .filter(t => (t.status==='paid' || t.status==='refunded') && t.payout_id)
+        .reduce((s,t)=>s + t.net_amount, 0);
+
+      const pending = txs
+        .filter(t => t.status==='pending' || !t.payout_id)
+        .reduce((s,t)=>s + t.net_amount, 0);
+
+      const openDisputes = dsps.filter(d=>d.status==='open');
+      const failedPayouts = pays.filter(p=>p.status==='failed');
+      const holdPayouts = pays.filter(p=>p.status==='on_hold');
+
+      const alerts = [];
+      if(openDisputes.length){
+        const soon = openDisputes
+          .filter(d=>d.evidence_due_date && d.evidence_due_date!=='—')
+          .sort((a,b)=>a.evidence_due_date.localeCompare(b.evidence_due_date))[0];
+        alerts.push({tone:'warn', title:`${openDisputes.length} chargeback${openDisputes.length>1?'s':''} need attention`, desc: soon?.evidence_due_date && soon.evidence_due_date!=='—' ? `Next evidence deadline: ${soon.evidence_due_date}` : 'Evidence may be needed soon.' , cta:{label:'View disputes', go:'disputes'}});
+      }
+      if(failedPayouts.length){
+        const p = failedPayouts[0];
+        alerts.push({tone:'bad', title:'A payout failed', desc:`${p.title} was returned by the bank. Update your bank details to re-send.`, cta:{label:'Review bank details', go:'settings'}});
+      }
+      if(holdPayouts.length){
+        const p = holdPayouts[0];
+        alerts.push({tone:'warn', title:'A payout is on hold', desc:`${p.title} is waiting for a booking issue to be resolved.`, cta:{label:'Explain this payout', action:'explain', payoutId:p.id}});
+      }
+      if(!alerts.length){
+        alerts.push({tone:'info', title:'All good', desc:'No payout blockers right now. You can still review activity and download your statement.', cta:{label:'Download statement', go:'reports'}});
+      }
+
+      return {ccy, next, lastPaid, available, pending, alerts};
+    }
+
+    // --- Page rendering ---
+    const tabs = el('tabs');
+    const pageTitle = el('pageTitle');
+    const pageSubtitle = el('pageSubtitle');
+    const pageRoot = el('pageRoot');
+    const pageActions = el('pageActions');
+
+    const drawer = el('drawer');
+    const drawerBody = el('drawerBody');
+    const drawerTitle = el('drawerTitle');
+    const drawerSub = el('drawerSub');
+    const backdrop = el('backdrop');
+
+    const modal = el('modal');
+    const modalTitle = el('modalTitle');
+    const modalBody = el('modalBody');
+    const modalFoot = el('modalFoot');
+
+    const toast = el('toast');
+    const toastMsg = el('toastMsg');
+
+    function buildTabs(){
+      tabs.innerHTML='';
+      PAGES.forEach(p=>{
+        const a = document.createElement('a');
+        a.className = 'tab';
+        a.href = `#${p.id}`;
+        a.textContent = p.label;
+        a.addEventListener('click', (e)=>{ e.preventDefault(); navigate(p.id); });
+        tabs.appendChild(a);
+      });
+    }
+
+    function setActiveTab(){
+      [...tabs.querySelectorAll('.tab')].forEach(a=>{
+        const id = (a.getAttribute('href')||'').replace('#','');
+        a.classList.toggle('active', id===state.page);
+      });
+    }
+
+    function render(){
+      setActiveTab();
+      closeDrawer();
+      closeModal();
+
+      if(state.page==='dashboard') return renderDashboard();
+      if(state.page==='transactions') return renderTransactions();
+      if(state.page==='payouts') return renderPayouts();
+      if(state.page==='disputes') return renderDisputes();
+      if(state.page==='fees') return renderFees();
+      if(state.page==='reports') return renderReports();
+      if(state.page==='settings') return renderSettings();
+
+      state.page='dashboard';
+      return renderDashboard();
+    }
+
+    function renderDashboard(){
+      const d = computeDashboard();
+
+      pageTitle.textContent = 'Dashboard';
+      pageSubtitle.textContent = 'A clear view of how much you’re getting, and when.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Download statement','', ()=>navigate('reports')));
+      pageActions.appendChild(btn('Raise an issue','primary', ()=>showToast('Issue created (demo). Our support team would be notified.')));
+
+      const nextLabel = d.next ? d.next.title : 'No payout scheduled yet';
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="card">
+            <div class="k">Next payout</div>
+            <div class="v">${d.next ? fmtMoney(d.next.net_payout, d.ccy) : '—'}</div>
+            <div class="s">${d.next ? `${nextLabel} • ${fmtDate(d.next.payout_date)}` : 'Your next payout will appear here once ready.'}</div>
+            <div class="row">
+              <div>${d.next ? statusChip(d.next.status) : ''}</div>
+              <div>
+                <a class="link" href="#" id="dashExplain">Explain this payout</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="k">Pending balance</div>
+            <div class="v">${fmtMoney(d.available, d.ccy)}</div>
+            <div class="s">Available now • Pending: ${fmtMoney(d.pending, d.ccy)}</div>
+            <div class="hint" style="margin-top:8px">Pending items move into the next payout once confirmed.</div>
+          </div>
+
+          <div class="card">
+            <div class="k">Last payout</div>
+            <div class="v">${d.lastPaid ? fmtMoney(d.lastPaid.net_payout, d.ccy) : '—'}</div>
+            <div class="s">${d.lastPaid ? `${d.lastPaid.title} • ${fmtDate(d.lastPaid.payout_date)}` : 'No paid payouts in this currency yet.'}</div>
+            <div class="hint" style="margin-top:8px">Reference: ${d.lastPaid ? escapeHtml(d.lastPaid.bank_ref || '—') : '—'}</div>
+          </div>
+
+          <div class="card">
+            <div class="k">Key alerts</div>
+            <div class="v">${d.alerts.filter(a=>a.tone!=='info').length || 0}</div>
+            <div class="s">Things that may block payout or need your attention.</div>
+            <div class="row" style="margin-top:10px">
+              <a class="link" href="#" id="dashAlerts">View alerts</a>
+              <a class="link" href="#" id="dashTx">View transactions</a>
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="grid">
+              <div class="span8">
+                <div class="table">
+                  <div class="table-top">
+                    <div class="meta">
+                      <span class="tag">Latest activity</span>
+                      <span class="tag">${escapeHtml(state.currency)} • ${escapeHtml(state.property)}</span>
+                    </div>
+                    <div class="meta">
+                      <button class="btn" id="dashToTx">View all</button>
+                    </div>
+                  </div>
+                  <div style="overflow:auto; max-height: 360px;">
+                    <table aria-label="Latest activity">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Reservation</th>
+                          <th>Guest</th>
+                          <th>Stay</th>
+                          <th>Type</th>
+                          <th>Status</th>
+                          <th style="text-align:right">Net</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dashLatest"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="span4" id="dashAlertCol"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Latest activity table
+      const {txs} = dataForContext();
+      const latest = [...txs]
+        .sort((a,b)=>b.created_at.localeCompare(a.created_at))
+        .slice(0,10);
+
+      el('dashLatest').innerHTML = latest.map(t=>`
+        <tr data-id="${escapeHtml(t.id)}">
+          <td>${escapeHtml(fmtDate(t.created_at))}</td>
+          <td><span class="mono">${escapeHtml(t.reservation_id)}</span></td>
+          <td>${escapeHtml(t.guest_name)}</td>
+          <td>${escapeHtml(t.stay_start_date)} → ${escapeHtml(t.stay_end_date)}</td>
+          <td>${escapeHtml(typeLabel(t.type))}</td>
+          <td>${statusChip(t.status)}</td>
+          <td style="text-align:right; font-family:var(--mono); font-weight:800">${escapeHtml(fmtMoney(t.net_amount, t.currency))}</td>
+        </tr>
+      `).join('');
+
+      [...el('dashLatest').querySelectorAll('tr')].forEach(tr=>{
+        tr.addEventListener('click', ()=> openTransactionDetails(tr.dataset.id));
+      });
+
+      // Alerts column
+      const alertCol = el('dashAlertCol');
+      alertCol.innerHTML = `<div class="table" style="padding:14px; background:transparent; border:0; box-shadow:none">
+        <div style="display:flex; flex-direction:column; gap:10px" id="dashAlertsList"></div>
+      </div>`;
+
+      el('dashAlertsList').innerHTML = d.alerts.map(a=>{
+        const toneCls = a.tone==='bad' ? 'bad' : a.tone==='warn' ? 'warn' : '';
+        return `
+          <div class="alert ${toneCls}">
+            <div class="dot" aria-hidden="true"></div>
+            <div style="flex:1">
+              <div class="t">${escapeHtml(a.title)}</div>
+              <div class="d">${escapeHtml(a.desc)}</div>
+              <div style="margin-top:8px">
+                <a class="link" href="#" data-cta="${escapeHtml(a.cta.action||'go')}" data-go="${escapeHtml(a.cta.go||'')}" data-payout="${escapeHtml(a.cta.payoutId||'')}">${escapeHtml(a.cta.label)}</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      alertCol.querySelectorAll('a[data-cta]').forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const cta = a.dataset.cta;
+          if(cta==='explain') openExplainPayout(a.dataset.payout);
+          else navigate(a.dataset.go || 'dashboard');
+        });
+      });
+
+      // Wires
+      el('dashToTx').addEventListener('click', ()=>navigate('transactions'));
+      el('dashTx').addEventListener('click', (e)=>{e.preventDefault(); navigate('transactions');});
+      el('dashAlerts').addEventListener('click', (e)=>{e.preventDefault(); showToast('Alerts are already shown on the right (demo).');});
+
+      el('dashExplain').addEventListener('click', (e)=>{
+        e.preventDefault();
+        if(d.next) openExplainPayout(d.next.id);
+        else showToast('No payout scheduled yet (demo).');
+      });
+
+      return;
+    }
+
+    function renderTransactions(){
+      pageTitle.textContent = 'Transactions';
+      pageSubtitle.textContent = 'Every movement is tied to a reservation, with a clear “net to you” amount.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Saved filters','', ()=>showToast('Saved filters (demo).')));
+      pageActions.appendChild(btn('Export','primary', ()=>exportTransactions()));
+
+      const {ccy, txs} = dataForContext();
+
+      // Default filters
+      const f = state.filters.transactions || {
+        status:'All',
+        range:'Last 30 days',
+        method:'All',
+        reservation:'',
+        guest:'',
+      };
+      state.filters.transactions = f;
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="card span3">
+            <div class="k">Total movements</div>
+            <div class="v">${txs.length.toLocaleString()}</div>
+            <div class="s">Payments, refunds, disputes, and adjustments.</div>
+          </div>
+          <div class="card span3">
+            <div class="k">Paid</div>
+            <div class="v">${txs.filter(t=>t.status==='paid').length}</div>
+            <div class="s">Included or ready for payout.</div>
+          </div>
+          <div class="card span3">
+            <div class="k">Pending</div>
+            <div class="v">${txs.filter(t=>t.status==='pending').length}</div>
+            <div class="s">Not yet confirmed for payout.</div>
+          </div>
+          <div class="card span3">
+            <div class="k">Needs attention</div>
+            <div class="v">${txs.filter(t=>t.status==='disputed').length}</div>
+            <div class="s">Disputes may affect your next payout.</div>
+          </div>
+
+          <div class="wide">
+            <div class="controls" role="region" aria-label="Transaction filters">
+              <div class="field"><label>Status</label>
+                <select id="txStatus">
+                  <option>All</option>
+                  <option>Paid</option>
+                  <option>Pending</option>
+                  <option>Refunded</option>
+                  <option>Disputed</option>
+                </select>
+              </div>
+              <div class="field"><label>Date range</label>
+                <select id="txRange">
+                  <option>Last 7 days</option>
+                  <option selected>Last 30 days</option>
+                  <option>Last 90 days</option>
+                </select>
+              </div>
+              <div class="field"><label>Payment method</label>
+                <select id="txMethod">
+                  <option>All</option>
+                  <option>Visa</option>
+                  <option>Mastercard</option>
+                  <option>Amex</option>
+                  <option>Wallet</option>
+                </select>
+              </div>
+              <div class="field"><label>Reservation</label>
+                <input id="txReservation" placeholder="e.g. RES-884201" value="${escapeHtml(f.reservation)}" />
+              </div>
+              <div class="field"><label>Guest</label>
+                <input id="txGuest" placeholder="e.g. John" value="${escapeHtml(f.guest)}" />
+              </div>
+              <div class="field"><label>Search</label>
+                <input id="txSearch" placeholder="Search transaction ID" value="" />
+              </div>
+              <button class="btn" id="txClear">Clear</button>
+            </div>
+
+            <div class="table">
+              <div class="table-top">
+                <div class="meta">
+                  <span class="tag">Default sort: newest first</span>
+                  <span class="tag">${escapeHtml(ccy)} • ${escapeHtml(state.property)}</span>
+                </div>
+                <div class="meta">
+                  <button class="btn" id="txExportCsv">Export CSV</button>
+                  <button class="btn primary" id="txExportXlsx">Export XLSX</button>
+                </div>
+              </div>
+              <div style="overflow:auto; max-height: 58vh">
+                <table aria-label="Transactions table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Reservation</th>
+                      <th>Guest</th>
+                      <th>Stay</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Payment method</th>
+                      <th>Gross</th>
+                      <th>Fees</th>
+                      <th>Net to you</th>
+                      <th>Payout</th>
+                    </tr>
+                  </thead>
+                  <tbody id="txBody"></tbody>
+                </table>
+              </div>
+              <div class="hint" style="padding: 10px 14px">Tip: Click a row to see the fee breakdown and (if settled) the linked payout.</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Set control values
+      el('txStatus').value = f.status;
+      el('txRange').value = f.range;
+      el('txMethod').value = f.method;
+
+      function applyFilters(){
+        const st = el('txStatus').value;
+        const method = el('txMethod').value;
+        const res = el('txReservation').value.trim();
+        const guest = el('txGuest').value.trim().toLowerCase();
+        const q = el('txSearch').value.trim().toLowerCase();
+
+        // Persist
+        f.status = st; f.method = method; f.reservation = res; f.guest = el('txGuest').value;
+
+        let rows = [...txs].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+        if(st !== 'All') rows = rows.filter(t => t.status === st.toLowerCase());
+        if(method !== 'All') rows = rows.filter(t => (t.payment_method||'').toLowerCase().includes(method.toLowerCase()));
+        if(res) rows = rows.filter(t => (t.reservation_id||'').toLowerCase().includes(res.toLowerCase()));
+        if(guest) rows = rows.filter(t => (t.guest_name||'').toLowerCase().includes(guest));
+        if(q) rows = rows.filter(t => (t.id||'').toLowerCase().includes(q));
+
+        const body = el('txBody');
+        if(!rows.length){
+          body.innerHTML = `<tr><td colspan="11"><div class="empty"><strong>No matching transactions</strong>Try clearing filters or searching by reservation ID.</div></td></tr>`;
+          return;
+        }
+
+        body.innerHTML = rows.map(t=>`
+          <tr data-id="${escapeHtml(t.id)}">
+            <td>${escapeHtml(fmtDate(t.created_at))}</td>
+            <td><span class="mono">${escapeHtml(t.reservation_id)}</span><div class="muted" style="font-size:11px">${escapeHtml(t.property_name)}</div></td>
+            <td>${escapeHtml(t.guest_name)}</td>
+            <td>${escapeHtml(t.stay_start_date)} → ${escapeHtml(t.stay_end_date)}</td>
+            <td>${escapeHtml(typeLabel(t.type))}</td>
+            <td>${statusChip(t.status)}</td>
+            <td>${escapeHtml(t.payment_method || '—')}</td>
+            <td class="mono">${escapeHtml(fmtMoney(t.gross_amount, t.currency))}</td>
+            <td class="mono">${escapeHtml(fmtMoney(t.fees_total, t.currency))}</td>
+            <td class="mono" style="font-weight:900">${escapeHtml(fmtMoney(t.net_amount, t.currency))}</td>
+            <td>${t.payout_id ? `<a class="link" href="#" data-payout="${escapeHtml(t.payout_id)}">${escapeHtml(t.payout_id)}</a>` : '<span class="muted">Not yet</span>'}</td>
+          </tr>
+        `).join('');
+
+        body.querySelectorAll('tr').forEach(tr=>{
+          tr.addEventListener('click', (e)=>{
+            // if click on payout link, handle separately
+            const a = e.target.closest('a[data-payout]');
+            if(a){
+              e.preventDefault();
+              navigate('payouts');
+              setTimeout(()=>openExplainPayout(a.dataset.payout), 50);
+              return;
+            }
+            openTransactionDetails(tr.dataset.id);
+          });
+        });
+      }
+
+      // wires
+      ['txStatus','txRange','txMethod'].forEach(id=>el(id).addEventListener('change', applyFilters));
+      ['txReservation','txGuest','txSearch'].forEach(id=>el(id).addEventListener('input', applyFilters));
+
+      el('txClear').addEventListener('click', ()=>{
+        el('txStatus').value='All';
+        el('txRange').value='Last 30 days';
+        el('txMethod').value='All';
+        el('txReservation').value='';
+        el('txGuest').value='';
+        el('txSearch').value='';
+        f.status='All'; f.range='Last 30 days'; f.method='All'; f.reservation=''; f.guest='';
+        applyFilters();
+      });
+
+      el('txExportCsv').addEventListener('click', ()=>exportTransactions('csv'));
+      el('txExportXlsx').addEventListener('click', ()=>exportTransactions('xlsx'));
+
+      applyFilters();
+    }
+
+    function renderPayouts(){
+      pageTitle.textContent = 'Payouts';
+      pageSubtitle.textContent = 'Upcoming and past payouts, with a simple breakdown of how the final number is calculated.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Monthly statement','', ()=>navigate('reports')));
+      pageActions.appendChild(btn('Export payouts','primary', ()=>exportPayouts()));
+
+      const {ccy, pays} = dataForContext();
+      const rows = [...pays].sort((a,b)=>b.payout_date.localeCompare(a.payout_date));
+
+      const next = rows.filter(p=>p.status==='upcoming' || p.status==='on_hold').sort((a,b)=>a.payout_date.localeCompare(b.payout_date))[0] || null;
+      const last = rows.filter(p=>p.status==='paid').sort((a,b)=>b.payout_date.localeCompare(a.payout_date))[0] || null;
+
+      const pendingAmt = rows.filter(p=>p.status==='upcoming').reduce((s,p)=>s+p.net_payout,0);
+      const paidYtd = rows.filter(p=>p.status==='paid').reduce((s,p)=>s+p.net_payout,0);
+
+      const failed = rows.filter(p=>p.status==='failed');
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          ${failed.length ? `
+            <div class="wide">
+              <div class="alert bad">
+                <div class="dot" aria-hidden="true"></div>
+                <div style="flex:1">
+                  <div class="t">Action needed: A payout failed</div>
+                  <div class="d">${escapeHtml(failed[0].title)} was returned by the bank. Update your bank details to re-send.</div>
+                  <div style="margin-top:8px"><a class="link" href="#" id="payoutFix">Review bank details</a></div>
+                </div>
+              </div>
+            </div>
+          `:''}
+
+          <div class="card">
+            <div class="k">Total paid (YTD)</div>
+            <div class="v">${fmtMoney(paidYtd, ccy)}</div>
+            <div class="s">Across paid payouts in ${escapeHtml(ccy)}.</div>
+          </div>
+          <div class="card">
+            <div class="k">Pending payout amount</div>
+            <div class="v">${fmtMoney(pendingAmt, ccy)}</div>
+            <div class="s">Upcoming payouts not yet sent.</div>
+          </div>
+          <div class="card">
+            <div class="k">Next scheduled payout</div>
+            <div class="v">${next ? fmtDate(next.payout_date) : '—'}</div>
+            <div class="s">${next ? next.title : 'No upcoming payout in this currency.'}</div>
+          </div>
+          <div class="card">
+            <div class="k">Last payout</div>
+            <div class="v">${last ? fmtMoney(last.net_payout, ccy) : '—'}</div>
+            <div class="s">${last ? `${last.title} • ${fmtDate(last.payout_date)}` : '—'}</div>
+          </div>
+
+          <div class="wide">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta">
+                  <span class="tag">Default sort: newest first</span>
+                  <span class="tag">${escapeHtml(ccy)} • ${escapeHtml(state.property)}</span>
+                </div>
+                <div class="meta">
+                  <button class="btn" id="poExportCsv">Export CSV</button>
+                  <button class="btn primary" id="poExportXlsx">Export XLSX</button>
+                </div>
+              </div>
+              <div style="overflow:auto; max-height: 58vh">
+                <table aria-label="Payouts table">
+                  <thead>
+                    <tr>
+                      <th>Payout</th>
+                      <th>Payout date</th>
+                      <th>What this payout covers</th>
+                      <th>Gross collected</th>
+                      <th>Refunds</th>
+                      <th>Chargebacks</th>
+                      <th>Fees</th>
+                      <th>Adjustments</th>
+                      <th>Net payout</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="poBody"></tbody>
+                </table>
+              </div>
+              <div class="hint" style="padding: 10px 14px">Click a payout to see “Explain this payout” and the included transactions.</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if(failed.length){
+        el('payoutFix').addEventListener('click', (e)=>{e.preventDefault(); navigate('settings');});
+      }
+
+      const body = el('poBody');
+      if(!rows.length){
+        body.innerHTML = `<tr><td colspan="10"><div class="empty"><strong>No payouts yet</strong>When a payout is scheduled, it will show up here with a clear breakdown.</div></td></tr>`;
+      } else {
+        body.innerHTML = rows.map(p=>`
+          <tr data-id="${escapeHtml(p.id)}">
+            <td><a class="link" href="#" data-explain="${escapeHtml(p.id)}">${escapeHtml(p.id)}</a><div class="muted" style="font-size:11px">${escapeHtml(p.property_name)}</div></td>
+            <td>${escapeHtml(fmtDate(p.payout_date))}</td>
+            <td>${escapeHtml(p.title)}</td>
+            <td class="mono">${escapeHtml(fmtMoney(p.gross_collected, p.currency))}</td>
+            <td class="mono">-${escapeHtml(fmtMoney(p.refunds_total, p.currency)).replace('-','')}</td>
+            <td class="mono">-${escapeHtml(fmtMoney(p.chargebacks_total, p.currency)).replace('-','')}</td>
+            <td class="mono">-${escapeHtml(fmtMoney(p.fees_total, p.currency)).replace('-','')}</td>
+            <td class="mono">${escapeHtml(fmtMoney(p.adjustments_total, p.currency))}</td>
+            <td class="mono" style="font-weight:900">${escapeHtml(fmtMoney(p.net_payout, p.currency))}</td>
+            <td>${statusChip(p.status)}</td>
+          </tr>
+        `).join('');
+
+        body.querySelectorAll('a[data-explain]').forEach(a=>{
+          a.addEventListener('click', (e)=>{e.preventDefault(); openExplainPayout(a.dataset.explain);});
+        });
+        body.querySelectorAll('tr').forEach(tr=>{
+          tr.addEventListener('click', (e)=>{
+            const a = e.target.closest('a[data-explain]');
+            if(a) return;
+            openExplainPayout(tr.dataset.id);
+          });
+        });
+      }
+
+      el('poExportCsv').addEventListener('click', ()=>exportPayouts('csv'));
+      el('poExportXlsx').addEventListener('click', ()=>exportPayouts('xlsx'));
+    }
+
+    function renderDisputes(){
+      pageTitle.textContent = 'Disputes & Refunds';
+      pageSubtitle.textContent = 'Chargebacks and refunds that may reduce your next payout.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Export log','primary', ()=>showToast('Export queued (demo).')));
+
+      const {ccy, txs, dsps} = dataForContext();
+      const refunds = txs.filter(t=>t.type==='refund').sort((a,b)=>b.created_at.localeCompare(a.created_at));
+      const open = dsps.filter(d=>d.status==='open');
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="card span4">
+            <div class="k">Total refunds</div>
+            <div class="v">${fmtMoney(Math.abs(refunds.reduce((s,t)=>s+t.net_amount,0)), ccy)}</div>
+            <div class="s">Refunds issued in ${escapeHtml(ccy)} (absolute total).</div>
+          </div>
+          <div class="card span4">
+            <div class="k">Open chargebacks</div>
+            <div class="v">${open.length}</div>
+            <div class="s">These may block or reduce payouts if overdue.</div>
+          </div>
+          <div class="card span4">
+            <div class="k">Win / loss</div>
+            <div class="v">${dsps.filter(d=>d.status==='won').length} : ${dsps.filter(d=>d.status==='lost').length}</div>
+            <div class="s">Outcomes for chargebacks (all time in this demo).</div>
+          </div>
+
+          <div class="wide">
+            <div class="grid">
+              <div class="span6">
+                <div class="table">
+                  <div class="table-top">
+                    <div class="meta"><span class="tag">Chargebacks</span><span class="tag">${escapeHtml(ccy)}</span></div>
+                    <div class="meta"><span class="hint">Tip: evidence deadlines are shown in plain English.</span></div>
+                  </div>
+                  <div style="overflow:auto; max-height: 52vh">
+                    <table aria-label="Chargebacks table">
+                      <thead>
+                        <tr>
+                          <th>Status</th>
+                          <th>Amount</th>
+                          <th>What happened</th>
+                          <th>Evidence due</th>
+                          <th>Fee</th>
+                          <th>Reservation</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dspBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="span6">
+                <div class="table">
+                  <div class="table-top">
+                    <div class="meta"><span class="tag">Refunds</span><span class="tag">${escapeHtml(ccy)}</span></div>
+                    <div class="meta"><span class="hint">Refunds show who started it (brand or property).</span></div>
+                  </div>
+                  <div style="overflow:auto; max-height: 52vh">
+                    <table aria-label="Refunds table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Reservation</th>
+                          <th>Guest</th>
+                          <th>Stay</th>
+                          <th>Initiator</th>
+                          <th>Reason</th>
+                          <th style="text-align:right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody id="refBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Disputes
+      const dspBody = el('dspBody');
+      if(!dsps.length){
+        dspBody.innerHTML = `<tr><td colspan="6"><div class="empty"><strong>No chargebacks</strong>If a cardholder raises a dispute, it will appear here with the evidence due date.</div></td></tr>`;
+      } else {
+        dspBody.innerHTML = dsps
+          .sort((a,b)=>{
+            const da = a.evidence_due_date==='—' ? '9999-12-31' : a.evidence_due_date;
+            const db = b.evidence_due_date==='—' ? '9999-12-31' : b.evidence_due_date;
+            return da.localeCompare(db);
+          })
+          .map(d=>{
+            const t = d.tx;
+            const res = t?.reservation_id || '—';
+            return `
+              <tr data-tx="${escapeHtml(d.transaction_id)}">
+                <td>${statusChip(d.status)}</td>
+                <td class="mono">${escapeHtml(fmtMoney(d.amount, d.currency))}</td>
+                <td>${escapeHtml(d.reason_text)}</td>
+                <td>${escapeHtml(d.evidence_due_date)}${d.status==='open' && d.evidence_due_date!=='—' ? `<div class="muted" style="font-size:11px">Don’t miss this date</div>` : ''}</td>
+                <td class="mono">${escapeHtml(fmtMoney(d.fee_amount||0, d.currency))}</td>
+                <td><span class="mono">${escapeHtml(res)}</span></td>
+              </tr>
+            `;
+          }).join('');
+
+        dspBody.querySelectorAll('tr').forEach(tr=>{
+          tr.addEventListener('click', ()=>openTransactionDetails(tr.dataset.tx));
+        });
+      }
+
+      // Refunds
+      const refBody = el('refBody');
+      if(!refunds.length){
+        refBody.innerHTML = `<tr><td colspan="7"><div class="empty"><strong>No refunds</strong>Refunds will show here with the reservation and who initiated it.</div></td></tr>`;
+      } else {
+        refBody.innerHTML = refunds.map(r=>`
+          <tr data-id="${escapeHtml(r.id)}">
+            <td>${escapeHtml(fmtDate(r.created_at))}</td>
+            <td><span class="mono">${escapeHtml(r.reservation_id)}</span></td>
+            <td>${escapeHtml(r.guest_name)}</td>
+            <td>${escapeHtml(r.stay_start_date)} → ${escapeHtml(r.stay_end_date)}</td>
+            <td>${escapeHtml(r.refund_initiator || '—')}</td>
+            <td>${escapeHtml(r.refund_reason || '—')}</td>
+            <td style="text-align:right; font-family:var(--mono); font-weight:900">${escapeHtml(fmtMoney(Math.abs(r.net_amount), r.currency))}</td>
+          </tr>
+        `).join('');
+        refBody.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click', ()=>openTransactionDetails(tr.dataset.id)));
+      }
+    }
+
+    function renderFees(){
+      pageTitle.textContent = 'Fees & Adjustments';
+      pageSubtitle.textContent = 'Clear fee categories and a simple roll-up that explains your net payout.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Export','primary', ()=>showToast('Fee report exported (demo).')));
+
+      const {ccy, txs, pays, fees} = dataForContext();
+
+      const byCat = (cat)=> fees.filter(f=>f.category===cat && (f.transaction_id || f.payout_id)).reduce((s,f)=>s + f.amount, 0);
+      const processing = byCat('processing');
+      const brand = byCat('brand');
+      const chargeback = byCat('chargeback');
+      const adjustment = byCat('adjustment');
+
+      // Reconciliation rollup (simple demo): gross of payments - refunds - disputes - fees +/- adjustments
+      const grossRevenue = txs.filter(t=>t.type==='payment' && t.status!=='pending').reduce((s,t)=>s + t.gross_amount,0);
+      const refunds = Math.abs(txs.filter(t=>t.type==='refund').reduce((s,t)=>s + t.gross_amount,0));
+      const disputesAbs = Math.abs(txs.filter(t=>t.type==='dispute').reduce((s,t)=>s + t.gross_amount,0));
+      const totalFees = processing + brand + chargeback;
+      const manualAdj = txs.filter(t=>t.type==='adjustment').reduce((s,t)=>s + t.net_amount,0);
+      const net = grossRevenue - refunds - disputesAbs - totalFees + manualAdj;
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="card">
+            <div class="k">Processing fees</div>
+            <div class="v">${fmtMoney(processing, ccy)}</div>
+            <div class="s">Card and wallet processing costs.</div>
+          </div>
+          <div class="card">
+            <div class="k">Brand service fees</div>
+            <div class="v">${fmtMoney(brand, ccy)}</div>
+            <div class="s">Fees charged by the brand for running payments centrally.</div>
+          </div>
+          <div class="card">
+            <div class="k">Chargeback fees</div>
+            <div class="v">${fmtMoney(chargeback, ccy)}</div>
+            <div class="s">Fees linked to disputes.</div>
+          </div>
+          <div class="card">
+            <div class="k">Manual adjustments</div>
+            <div class="v">${fmtMoney(manualAdj, ccy)}</div>
+            <div class="s">Corrections applied to keep the ledger accurate.</div>
+          </div>
+
+          <div class="wide">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Reconciliation summary</span><span class="tag">${escapeHtml(ccy)}</span></div>
+                <div class="meta"><button class="btn" id="feesExplain">Explain this calculation</button></div>
+              </div>
+              <div style="padding: 14px">
+                <div class="waterfall" id="feesWf">
+                  ${wfRow('Gross revenue (paid bookings)', 'Money collected for bookings that are paid.', fmtMoney(grossRevenue, ccy))}
+                  ${wfRow('Refunds', 'Money returned to guests.', `-${fmtMoney(refunds, ccy).replace('-','')}`)}
+                  ${wfRow('Chargebacks', 'Money held back due to disputes.', `-${fmtMoney(disputesAbs, ccy).replace('-','')}`)}
+                  ${wfRow('Fees (total)', 'Processing + brand service + chargeback fees.', `-${fmtMoney(totalFees, ccy).replace('-','')}`)}
+                  ${wfRow('Manual adjustments', 'Corrections (positive or negative).', fmtMoney(manualAdj, ccy))}
+                  ${wfRow('Estimated net payout', 'What you would receive once included in a payout.', fmtMoney(net, ccy))}
+                </div>
+                <div class="hint" style="margin-top:10px">This page explains *why* the payout number is what it is. For the payout-by-payout breakdown, see Payouts.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Fee lines</span><span class="tag">Sorted: newest first (demo)</span></div>
+                <div class="meta"><span class="hint">Click a fee line to see linked reservation or payout.</span></div>
+              </div>
+              <div style="overflow:auto; max-height: 52vh">
+                <table aria-label="Fee lines table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Linked reservation</th>
+                      <th>Linked payout</th>
+                    </tr>
+                  </thead>
+                  <tbody id="feeBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      el('feesExplain').addEventListener('click', ()=>{
+        openModal('How this is calculated', `
+          <div class="hint">This is a plain-English reconciliation rollup (demo). In production, each step links back to the exact reservations and payouts.</div>
+          <div class="waterfall">
+            ${wfRow('Gross revenue', 'Sum of paid booking payments.', fmtMoney(grossRevenue, ccy))}
+            ${wfRow('Refunds', 'Sum of refunds linked to reservations.', `-${fmtMoney(refunds, ccy).replace('-','')}`)}
+            ${wfRow('Chargebacks', 'Disputes currently holding funds back.', `-${fmtMoney(disputesAbs, ccy).replace('-','')}`)}
+            ${wfRow('Fees', 'Processing + brand service + dispute fees.', `-${fmtMoney(totalFees, ccy).replace('-','')}`)}
+            ${wfRow('Adjustments', 'Manual corrections.', fmtMoney(manualAdj, ccy))}
+            ${wfRow('Estimated net', 'Net result.', fmtMoney(net, ccy))}
+          </div>
+        `, [{label:'Close', kind:'primary', onClick: closeModal}]);
+      });
+
+      const body = el('feeBody');
+      const rows = [...fees].filter(f=>f.transaction_id || f.payout_id);
+      if(!rows.length){
+        body.innerHTML = `<tr><td colspan="5"><div class="empty"><strong>No fees</strong>Fees will appear here as the brand processes payments.</div></td></tr>`;
+      } else {
+        body.innerHTML = rows.map(f=>{
+          const t = f.transaction_id ? transactions.find(x=>x.id===f.transaction_id) : null;
+          const reservation = t?.reservation_id || '—';
+          return `
+            <tr data-tx="${escapeHtml(f.transaction_id||'')}" data-po="${escapeHtml(f.payout_id||'')}">
+              <td>${escapeHtml(feeCategoryLabel(f.category))}</td>
+              <td>${escapeHtml(f.description)}</td>
+              <td class="mono">${escapeHtml(fmtMoney(f.amount, f.currency))}</td>
+              <td>${reservation!=='—' ? `<span class="mono">${escapeHtml(reservation)}</span>` : '<span class="muted">—</span>'}</td>
+              <td>${f.payout_id ? `<a class="link" href="#" data-explain="${escapeHtml(f.payout_id)}">${escapeHtml(f.payout_id)}</a>` : '<span class="muted">—</span>'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        body.querySelectorAll('a[data-explain]').forEach(a=>{
+          a.addEventListener('click', (e)=>{e.preventDefault(); openExplainPayout(a.dataset.explain);});
+        });
+
+        body.querySelectorAll('tr').forEach(tr=>{
+          tr.addEventListener('click', (e)=>{
+            const a = e.target.closest('a[data-explain]');
+            if(a) return;
+            const txid = tr.dataset.tx;
+            const po = tr.dataset.po;
+            if(txid) openTransactionDetails(txid);
+            else if(po) openExplainPayout(po);
+          });
+        });
+      }
+    }
+
+    function renderReports(){
+      pageTitle.textContent = 'Reports';
+      pageSubtitle.textContent = 'Download statements and exports for accounting and reconciliation.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Custom report','primary', ()=>showToast('Report builder coming soon (demo).')));
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="card span4">
+            <div class="k">Operational reports</div>
+            <div class="v">Templates</div>
+            <div class="s">Daily activity, declines, and review lists.</div>
+            <div style="margin-top:10px"><a class="link" href="#" id="rOps">View templates →</a></div>
+          </div>
+          <div class="card span4">
+            <div class="k">Financial reports</div>
+            <div class="v">Statements</div>
+            <div class="s">Payout statements and monthly summaries.</div>
+            <div style="margin-top:10px"><a class="link" href="#" id="rFin">View templates →</a></div>
+          </div>
+          <div class="card span4" style="border-style:dashed; background: rgba(255,255,255,.75)">
+            <div class="k">Report builder</div>
+            <div class="v">Create</div>
+            <div class="s">Build a custom export from Transactions and Payouts.</div>
+            <div style="margin-top:10px"><a class="link" href="#" id="rBuild">Build a report →</a></div>
+          </div>
+
+          <div class="wide">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Download</span><span class="tag">CSV / XLSX</span></div>
+                <div class="meta"><span class="hint">Exports use stable column names and ISO dates.</span></div>
+              </div>
+              <div style="padding:14px" class="split">
+                <div>
+                  <strong style="font-size:13px">Monthly statement</strong>
+                  <div class="hint">A summary of money in and out for the month, by currency.</div>
+                  <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+                    <button class="btn" id="stmtCsv">Download CSV</button>
+                    <button class="btn primary" id="stmtXlsx">Download XLSX</button>
+                  </div>
+                </div>
+                <div>
+                  <strong style="font-size:13px">Full subledger</strong>
+                  <div class="hint">Every transaction movement with reservation context.</div>
+                  <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+                    <button class="btn" id="subCsv">Download CSV</button>
+                    <button class="btn primary" id="subXlsx">Download XLSX</button>
+                  </div>
+                </div>
+                <div>
+                  <strong style="font-size:13px">Payout history</strong>
+                  <div class="hint">All payouts with a breakdown (gross → net).</div>
+                  <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+                    <button class="btn" id="payCsv">Download CSV</button>
+                    <button class="btn primary" id="payXlsx">Download XLSX</button>
+                  </div>
+                </div>
+                <div>
+                  <strong style="font-size:13px">Dispute summary</strong>
+                  <div class="hint">Open, won, and lost disputes with deadlines.</div>
+                  <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+                    <button class="btn" id="dspCsv">Download CSV</button>
+                    <button class="btn primary" id="dspXlsx">Download XLSX</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Saved & scheduled reports</span></div>
+                <div class="meta"><span class="hint">In production, these run automatically and email the result.</span></div>
+              </div>
+              <div style="overflow:auto">
+                <table aria-label="Saved reports">
+                  <thead>
+                    <tr>
+                      <th>Report name</th>
+                      <th>Category</th>
+                      <th>Schedule</th>
+                      <th>Last run</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Daily activity (by reservation)</strong></td>
+                      <td class="muted">Operational</td>
+                      <td class="muted">Daily at 00:00 UTC</td>
+                      <td class="muted">2026-03-02 00:05</td>
+                      <td><a class="link" href="#" id="run1">Run now</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Monthly payout statement</strong></td>
+                      <td class="muted">Financial</td>
+                      <td class="muted">1st of month</td>
+                      <td class="muted">2026-03-01 01:15</td>
+                      <td><a class="link" href="#" id="run2">Run now</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Chargeback exposure report</strong></td>
+                      <td class="muted">Operational</td>
+                      <td class="muted">Weekly (Mon)</td>
+                      <td class="muted">2026-03-02 02:00</td>
+                      <td><a class="link" href="#" id="run3">Run now</a></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Payout reconciliation</strong></td>
+                      <td class="muted">Financial</td>
+                      <td class="muted">On demand</td>
+                      <td class="muted">2026-02-28 14:30</td>
+                      <td><a class="link" href="#" id="run4">Run now</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // wires
+      el('rOps').addEventListener('click', (e)=>{e.preventDefault(); showToast('Operational templates (demo).');});
+      el('rFin').addEventListener('click', (e)=>{e.preventDefault(); showToast('Financial templates (demo).');});
+      el('rBuild').addEventListener('click', (e)=>{e.preventDefault(); showToast('Report builder coming soon (demo).');});
+
+      // Exports
+      el('stmtCsv').addEventListener('click', ()=>downloadFile(makeMonthlyStatementCSV(),'monthly_statement.csv','text/csv'));
+      el('stmtXlsx').addEventListener('click', ()=>downloadFile(makeMonthlyStatementCSV(), 'monthly_statement.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
+
+      el('subCsv').addEventListener('click', ()=>exportTransactions('csv'));
+      el('subXlsx').addEventListener('click', ()=>exportTransactions('xlsx'));
+
+      el('payCsv').addEventListener('click', ()=>exportPayouts('csv'));
+      el('payXlsx').addEventListener('click', ()=>exportPayouts('xlsx'));
+
+      el('dspCsv').addEventListener('click', ()=>downloadFile(makeDisputeCSV(),'dispute_summary.csv','text/csv'));
+      el('dspXlsx').addEventListener('click', ()=>downloadFile(makeDisputeCSV(),'dispute_summary.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
+
+      ['run1','run2','run3','run4'].forEach(id=>el(id).addEventListener('click',(e)=>{e.preventDefault(); showToast('Report queued (demo).');}));
+    }
+
+    function renderSettings(){
+      pageTitle.textContent = 'Settings';
+      pageSubtitle.textContent = 'Manage payout bank details, notifications, and user access.';
+
+      pageActions.innerHTML = '';
+      pageActions.appendChild(btn('Save changes','primary', ()=>showToast('Settings saved (demo).')));
+
+      pageRoot.innerHTML = `
+        <div class="grid">
+          <div class="span8">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Bank account for payouts</span></div>
+                <div class="meta"><span class="hint">If missing or invalid, payouts can fail.</span></div>
+              </div>
+              <div style="padding:14px">
+                <div class="controls">
+                  <div class="field"><label>Account name</label><input id="bankName" value="Ibis London Ltd" /></div>
+                  <div class="field"><label>IBAN</label><input id="bankIban" value="GB** **** **** **** 4455" /></div>
+                  <div class="field"><label>Bank / clearing code</label><input id="bankSort" value="20-00-00" /></div>
+                </div>
+                <div class="hint">Tip: Keep this up to date to avoid failed transfers.</div>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">Notification preferences</span></div>
+                <div class="meta"><span class="hint">Alerts are proactive — you shouldn’t need to hunt.</span></div>
+              </div>
+              <div style="padding:14px">
+                <div class="controls">
+                  <div class="field"><label>Chargeback alerts</label>
+                    <select id="nCharge">
+                      <option>Immediately</option>
+                      <option>Daily summary</option>
+                      <option>Off</option>
+                    </select>
+                  </div>
+                  <div class="field"><label>Payout updates</label>
+                    <select id="nPayout">
+                      <option>Immediately</option>
+                      <option>Daily summary</option>
+                      <option>Off</option>
+                    </select>
+                  </div>
+                  <div class="field"><label>Delivery</label>
+                    <select id="nDelivery">
+                      <option>Email</option>
+                      <option>SMS</option>
+                      <option>Both</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="span4">
+            <div class="table">
+              <div class="table-top">
+                <div class="meta"><span class="tag">User roles & access</span></div>
+              </div>
+              <div style="padding:14px">
+                <div class="hint">Roles control what each person can see. (This demo is view-only.)</div>
+                <div class="hr"></div>
+                <div style="display:flex; flex-direction:column; gap:10px">
+                  ${roleRow('Accountant','Can export reports and view fee breakdowns.')}
+                  ${roleRow('Manager','Can view dashboards and investigate issues.')}
+                  ${roleRow('Read-only','Can view transactions and payouts, no exports.')}
+                </div>
+                <div class="hr"></div>
+                <button class="btn" id="addUser">Invite user</button>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="alert bad">
+              <div class="dot" aria-hidden="true"></div>
+              <div>
+                <div class="t">If payouts fail</div>
+                <div class="d">Check bank details first. If still failing, raise an issue with the payout reference.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      el('addUser').addEventListener('click', ()=>showToast('Invite sent (demo).'));
+    }
+
+    // --- Details / Progressive disclosure ---
+    function openTransactionDetails(txId){
+      const t = transactions.find(x=>x.id===txId);
+      if(!t){ showToast('Transaction not found (demo).'); return; }
+
+      const {ccy} = dataForContext();
+
+      drawerTitle.textContent = `Reservation ${t.reservation_id} — ${t.guest_name}`;
+      drawerSub.textContent = `Stay ${t.stay_start_date} to ${t.stay_end_date} • ${t.property_name}`;
+
+      const payoutObj = t.payout_id ? payouts.find(p=>p.id===t.payout_id) : null;
+      const feeItems = feeLines.filter(f => f.transaction_id===t.id);
+
+      const expected = payoutObj
+        ? `${fmtDate(payoutObj.payout_date)} (${payoutObj.status==='paid' ? 'already paid' : 'scheduled'})`
+        : (t.status==='pending' ? 'Not scheduled yet (still pending)' : 'Not scheduled yet');
+
+      drawerBody.innerHTML = `
+        <div class="section">
+          <div class="sh"><strong>At a glance</strong><span class="muted" style="font-size:11px">“How much am I getting, and when?”</span></div>
+          <div class="sb">
+            <div class="kv">
+              ${kv('Transaction ID', t.id)}
+              ${kv('Status', stripHtml(statusChip(t.status)))}
+              ${kv('Gross amount', fmtMoney(t.gross_amount, t.currency))}
+              ${kv('Fees', fmtMoney(t.fees_total, t.currency))}
+              ${kv('Net to you', fmtMoney(t.net_amount, t.currency))}
+              ${kv('Expected payout', expected)}
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sh"><strong>Fee breakdown</strong><span class="muted" style="font-size:11px">Plain English categories</span></div>
+          <div class="sb" id="feeBreak"></div>
+        </div>
+
+        <div class="section">
+          <div class="sh"><strong>Links</strong><span class="muted" style="font-size:11px">Go deeper only if needed</span></div>
+          <div class="sb" style="display:flex; gap:10px; flex-wrap:wrap">
+            ${t.payout_id ? `<button class="btn primary" id="viewPayout">Explain payout</button>` : `<button class="btn" id="noPayout" disabled>Explain payout</button>`}
+            <button class="btn" id="viewAllTx">View in Transactions</button>
+            <button class="btn" id="copyLink">Copy link</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sh"><strong>What happened</strong><span class="muted" style="font-size:11px">Simple timeline (demo)</span></div>
+          <div class="sb">
+            ${timelineFor(t)}
+          </div>
+        </div>
+      `;
+
+      // Fee breakdown
+      const feeBreak = drawerBody.querySelector('#feeBreak');
+      if(!feeItems.length){
+        feeBreak.innerHTML = `<div class="hint">No fee lines recorded for this entry in the demo.</div>`;
+      } else {
+        feeBreak.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:8px">
+            ${feeItems.map(f=>`
+              <div class="wf-row">
+                <div class="l"><strong>${escapeHtml(feeCategoryLabel(f.category))}</strong><span>${escapeHtml(f.description)}</span></div>
+                <div class="r">${escapeHtml(fmtMoney(f.amount, f.currency))}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // wires
+      const copy = drawerBody.querySelector('#copyLink');
+      copy.addEventListener('click', ()=>{
+        const url = `${location.origin}${location.pathname}#transactions?tx=${encodeURIComponent(t.id)}`;
+        navigator.clipboard?.writeText(url).catch(()=>{});
+        showToast('Link copied (demo).');
+      });
+      drawerBody.querySelector('#viewAllTx').addEventListener('click', ()=>navigate('transactions'));
+
+      const viewPayout = drawerBody.querySelector('#viewPayout');
+      if(viewPayout){
+        viewPayout.addEventListener('click', ()=>openExplainPayout(t.payout_id));
+      }
+
+      openDrawer();
+    }
+
+    function openExplainPayout(payoutId){
+      const p = payouts.find(x=>x.id===payoutId);
+      if(!p){ showToast('Payout not found (demo).'); return; }
+
+      const {ccy} = dataForContext();
+
+      const included = transactions
+        .filter(t => t.payout_id===p.id)
+        .sort((a,b)=>b.created_at.localeCompare(a.created_at));
+
+      // Explain components (must reconcile to net payout)
+      const gross = p.gross_collected;
+      const refunds = p.refunds_total;
+      const cbs = p.chargebacks_total;
+      const fees = p.fees_total;
+      const adjs = p.adjustments_total;
+      const net = p.net_payout;
+
+      const reconciles = (Math.round((gross - refunds - cbs - fees + adjs) * 100) === Math.round(net * 100));
+
+      const blockerMsg = p.status==='on_hold'
+        ? 'This payout is on hold. Fix the issue shown below to release it.'
+        : p.status==='failed'
+          ? 'This payout failed at the bank. Update bank details to re-send.'
+          : 'This payout is ready (or already paid).';
+
+      openModal(
+        'Explain this payout',
+        `
+          <div>
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start">
+              <div>
+                <div style="font-weight:900">${escapeHtml(p.title)}</div>
+                <div class="hint">Payout date: ${escapeHtml(fmtDate(p.payout_date))} • Property: ${escapeHtml(p.property_name)} • Currency: ${escapeHtml(p.currency)}</div>
+              </div>
+              <div>${statusChip(p.status)}</div>
+            </div>
+            <div class="hr"></div>
+            <div class="hint">${escapeHtml(blockerMsg)}</div>
+          </div>
+
+          ${p.status==='on_hold' ? `
+            <div class="alert warn">
+              <div class="dot" aria-hidden="true"></div>
+              <div>
+                <div class="t">On hold: needs attention</div>
+                <div class="d">A chargeback or booking issue is unresolved. Check Disputes & Refunds for deadlines.</div>
+              </div>
+            </div>
+          `:''}
+
+          ${p.status==='failed' ? `
+            <div class="alert bad">
+              <div class="dot" aria-hidden="true"></div>
+              <div>
+                <div class="t">Failed at the bank</div>
+                <div class="d">Please review bank details in Settings. Reference: ${escapeHtml(p.bank_ref || '—')}</div>
+              </div>
+            </div>
+          `:''}
+
+          <div class="waterfall">
+            ${wfRow('Gross collected', 'Money collected for bookings in this payout window.', fmtMoney(gross, p.currency))}
+            ${wfRow('Refunds', 'Money returned to guests.', `-${fmtMoney(refunds, p.currency).replace('-','')}`)}
+            ${wfRow('Chargebacks', 'Money held back because of disputes.', `-${fmtMoney(cbs, p.currency).replace('-','')}`)}
+            ${wfRow('Fees', 'Processing and brand fees.', `-${fmtMoney(fees, p.currency).replace('-','')}`)}
+            ${wfRow('Adjustments', 'Corrections (positive or negative).', fmtMoney(adjs, p.currency))}
+            ${wfRow('Net payout', 'What you receive.', fmtMoney(net, p.currency))}
+          </div>
+
+          <div class="hint">${reconciles ? '✅ This breakdown adds up exactly to the net payout.' : '⚠️ Demo data mismatch: breakdown does not reconcile.'}</div>
+
+          <div class="hr"></div>
+
+          <div>
+            <strong style="font-size:13px">Included transactions</strong>
+            <div class="hint">Every entry links to a reservation.</div>
+            <div style="overflow:auto; max-height: 240px; margin-top:10px; border:1px solid var(--line); border-radius: 14px">
+              <table aria-label="Included transactions">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Reservation</th>
+                    <th>Guest</th>
+                    <th>Stay</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${included.length ? included.map(t=>`
+                    <tr data-tx="${escapeHtml(t.id)}">
+                      <td>${escapeHtml(fmtDate(t.created_at))}</td>
+                      <td><span class="mono">${escapeHtml(t.reservation_id)}</span></td>
+                      <td>${escapeHtml(t.guest_name)}</td>
+                      <td>${escapeHtml(t.stay_start_date)} → ${escapeHtml(t.stay_end_date)}</td>
+                      <td>${escapeHtml(typeLabel(t.type))}</td>
+                      <td>${statusChip(t.status)}</td>
+                      <td style="text-align:right; font-family:var(--mono); font-weight:900">${escapeHtml(fmtMoney(t.net_amount, t.currency))}</td>
+                    </tr>
+                  `).join('') : `<tr><td colspan="7"><div class="empty"><strong>No transactions linked</strong>This can happen if the payout is newly created or on hold.</div></td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `,
+        [
+          {label:'Export CSV', kind:'', onClick: ()=>exportPayouts('csv')},
+          {label:'Export XLSX', kind:'', onClick: ()=>exportPayouts('xlsx')},
+          {label:'Close', kind:'primary', onClick: closeModal},
+          ...(p.status==='failed' ? [{label:'Review bank details', kind:'danger', onClick: ()=>{closeModal(); navigate('settings');}}] : [])
+        ]
+      );
+
+      // Wire up included table click
+      modalBody.querySelectorAll('tr[data-tx]').forEach(tr=>{
+        tr.addEventListener('click', ()=>{
+          closeModal();
+          navigate('transactions');
+          setTimeout(()=>openTransactionDetails(tr.dataset.tx), 50);
+        });
+      });
+    }
+
+    // --- Export helpers (stable column names, ISO dates) ---
+    function exportTransactions(format='csv'){
+      const {txs} = dataForContext();
+      const rows = [...txs].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+
+      const headers = [
+        'id','created_at','type','status','currency','gross_amount','fees_total','net_amount','payment_method',
+        'reservation_id','guest_name','stay_start_date','stay_end_date','payout_id','brand_channel','property_name'
+      ];
+      const csv = toCSV(headers, rows.map(t=>({
+        id:t.id,
+        created_at: new Date(t.created_at).toISOString(),
+        type:t.type,
+        status:t.status,
+        currency:t.currency,
+        gross_amount:t.gross_amount,
+        fees_total:t.fees_total,
+        net_amount:t.net_amount,
+        payment_method:t.payment_method,
+        reservation_id:t.reservation_id,
+        guest_name:t.guest_name,
+        stay_start_date:t.stay_start_date,
+        stay_end_date:t.stay_end_date,
+        payout_id:t.payout_id||'',
+        brand_channel:t.brand_channel||'',
+        property_name:t.property_name||''
+      })));
+
+      const name = `transactions_${state.currency}_${slug(state.property)}.${format==='xlsx'?'xlsx':'csv'}`;
+      const mime = format==='xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+      downloadFile(csv, name, mime);
+      showToast(`Export started (${format.toUpperCase()}) (demo).`);
+    }
+
+    function exportPayouts(format='csv'){
+      const {pays} = dataForContext();
+      const rows = [...pays].sort((a,b)=>b.payout_date.localeCompare(a.payout_date));
+      const headers = [
+        'id','payout_date','currency','gross_collected','refunds_total','chargebacks_total','fees_total','adjustments_total','net_payout','status','title','property_name','bank_ref'
+      ];
+      const csv = toCSV(headers, rows.map(p=>({
+        id:p.id,
+        payout_date: p.payout_date,
+        currency:p.currency,
+        gross_collected:p.gross_collected,
+        refunds_total:p.refunds_total,
+        chargebacks_total:p.chargebacks_total,
+        fees_total:p.fees_total,
+        adjustments_total:p.adjustments_total,
+        net_payout:p.net_payout,
+        status:p.status,
+        title:p.title,
+        property_name:p.property_name,
+        bank_ref:p.bank_ref||''
+      })));
+
+      const name = `payouts_${state.currency}_${slug(state.property)}.${format==='xlsx'?'xlsx':'csv'}`;
+      const mime = format==='xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+      downloadFile(csv, name, mime);
+      showToast(`Export started (${format.toUpperCase()}) (demo).`);
+    }
+
+    function makeMonthlyStatementCSV(){
+      const {ccy, txs, pays} = dataForContext();
+      // Simple monthly rollup (demo)
+      const month = '2026-03';
+      const inMonthTx = txs.filter(t => fmtDate(t.created_at).startsWith(month));
+      const inMonthPay = pays.filter(p => p.payout_date.startsWith(month));
+      const gross = inMonthTx.filter(t=>t.type==='payment').reduce((s,t)=>s+t.gross_amount,0);
+      const refunds = Math.abs(inMonthTx.filter(t=>t.type==='refund').reduce((s,t)=>s+t.gross_amount,0));
+      const disputesAbs = Math.abs(inMonthTx.filter(t=>t.type==='dispute').reduce((s,t)=>s+t.gross_amount,0));
+      const fees = inMonthTx.reduce((s,t)=>s+t.fees_total,0);
+      const net = gross - refunds - disputesAbs - fees;
+
+      const headers = ['month','currency','gross_payments','refunds','chargebacks','fees_total','estimated_net','payouts_in_month'];
+      const rows = [{
+        month,
+        currency:ccy,
+        gross_payments:gross,
+        refunds,
+        chargebacks:disputesAbs,
+        fees_total:fees,
+        estimated_net:net,
+        payouts_in_month: inMonthPay.length
+      }];
+      return toCSV(headers, rows);
+    }
+
+    function makeDisputeCSV(){
+      const {ccy, dsps} = dataForContext();
+      const headers = ['id','transaction_id','amount','currency','status','reason_code','reason_text','evidence_due_date','fee_amount','reservation_id','guest_name','stay_start_date','stay_end_date'];
+      const rows = dsps.map(d=>({
+        id:d.id,
+        transaction_id:d.transaction_id,
+        amount:d.amount,
+        currency:ccy,
+        status:d.status,
+        reason_code:d.reason_code,
+        reason_text:d.reason_text,
+        evidence_due_date:d.evidence_due_date,
+        fee_amount:d.fee_amount,
+        reservation_id:d.tx?.reservation_id || '',
+        guest_name:d.tx?.guest_name || '',
+        stay_start_date:d.tx?.stay_start_date || '',
+        stay_end_date:d.tx?.stay_end_date || ''
+      }));
+      return toCSV(headers, rows);
+    }
+
+    function toCSV(headers, rows){
+      const esc = (v)=>{
+        const s = (v===null||v===undefined) ? '' : String(v);
+        if(/[\n\r,\"]/g.test(s)) return `"${s.replaceAll('"','""')}"`;
+        return s;
+      };
+      const lines = [headers.join(',')];
+      rows.forEach(r=>{
+        lines.push(headers.map(h=>esc(r[h])).join(','));
+      });
+      return lines.join('\n');
+    }
+
+    function downloadFile(content, filename, mime){
+      const blob = new Blob([content], {type: mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    }
+
+    // --- Small building blocks ---
+    function btn(label, kind, onClick){
+      const b = document.createElement('button');
+      b.className = `btn ${kind||''}`;
+      b.textContent = label;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    function wfRow(title, desc, amount){
+      return `
+        <div class="wf-row">
+          <div class="l"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(desc)}</span></div>
+          <div class="r">${escapeHtml(amount)}</div>
+        </div>
+      `;
+    }
+
+    function roleRow(name, desc){
+      return `
+        <div style="border:1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: rgba(248,250,252,.75)">
+          <div style="font-weight:900; font-size:13px">${escapeHtml(name)}</div>
+          <div class="hint">${escapeHtml(desc)}</div>
+        </div>
+      `;
+    }
+
+    function typeLabel(type){
+      const map = {payment:'Payment received', refund:'Refund', dispute:'Chargeback', adjustment:'Adjustment'};
+      return map[type] || type;
+    }
+
+    function feeCategoryLabel(cat){
+      const map = {processing:'Processing fee', brand:'Brand service fee', chargeback:'Chargeback fee', adjustment:'Manual adjustment'};
+      return map[cat] || cat;
+    }
+
+    function kv(k,v){
+      return `<div class="item"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div>`;
+    }
+
+    function timelineFor(t){
+      const items = [];
+      if(t.type==='payment'){
+        items.push(`• Payment received on ${fmtDateTime(t.created_at)}.`);
+        if(t.status==='pending') items.push('• Waiting for confirmation before it can be included in a payout.');
+        else items.push('• Confirmed and ready for payout.');
+      }
+      if(t.type==='refund'){
+        items.push(`• Refund sent on ${fmtDateTime(t.created_at)}.`);
+        items.push(`• Initiated by ${t.refund_initiator || '—'}.`);
+      }
+      if(t.type==='dispute'){
+        items.push(`• Chargeback opened on ${fmtDateTime(t.created_at)}.`);
+        items.push('• Funds are held back while the dispute is resolved.');
+      }
+      if(t.type==='adjustment'){
+        items.push(`• Adjustment applied on ${fmtDateTime(t.created_at)}.`);
+        if(t.adjustment_reason) items.push(`• Reason: ${escapeHtml(t.adjustment_reason)}.`);
+      }
+      if(t.payout_id){
+        const p = payouts.find(x=>x.id===t.payout_id);
+        if(p){
+          items.push(`• Included in “${escapeHtml(p.title)}” (${fmtDate(p.payout_date)}).`);
+        }
+      }
+      return `<div class="hint">${items.join('<br/>')}</div>`;
+    }
+
+    function slug(s){
+      return String(s||'all').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_\-]/g,'');
+    }
+
+    function stripHtml(html){
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      return d.textContent || d.innerText || '';
+    }
+
+    // --- Drawer / Modal / Toast ---
+    function openDrawer(){
+      backdrop.classList.add('show');
+      drawer.classList.add('open');
+      backdrop.setAttribute('aria-hidden','false');
+    }
+    function closeDrawer(){
+      drawer.classList.remove('open');
+      backdrop.classList.remove('show');
+      backdrop.setAttribute('aria-hidden','true');
+    }
+
+    function openModal(title, bodyHtml, buttons=[]){
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFoot.innerHTML = '';
+      buttons.forEach(b=>{
+        const btnEl = document.createElement('button');
+        btnEl.className = `btn ${b.kind||''}`;
+        btnEl.textContent = b.label;
+        btnEl.addEventListener('click', b.onClick);
+        modalFoot.appendChild(btnEl);
+      });
+      backdrop.classList.add('show');
+      modal.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){
+      modal.classList.remove('show');
+      // Only hide backdrop if drawer not open
+      if(!drawer.classList.contains('open')){
+        backdrop.classList.remove('show');
+        backdrop.setAttribute('aria-hidden','true');
+      }
+    }
+
+    function showToast(msg){
+      toastMsg.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>toast.classList.remove('show'), 3200);
+    }
+
+    // --- Navigation & global controls ---
+    function navigate(page){
+      state.page = page;
+      location.hash = `#${page}`;
+      render();
+    }
+
+    function initFromHash(){
+      const h = (location.hash||'').replace('#','').trim();
+      if(h && PAGES.some(p=>p.id===h)) return h;
+      return 'dashboard';
+    }
+
+    // Currency toggle: USD <-> EUR
+    el('ccyToggle').addEventListener('click', ()=>{
+      state.currency = (state.currency==='USD') ? 'EUR' : 'USD';
+      el('ccyToggle').textContent = state.currency;
+      showToast(`Currency set to ${state.currency} (demo).`);
+      render();
+    });
+
+    // Property toggle: All -> Ibis -> Scandic -> Crowne -> Holiday Inn -> All
+    el('propToggle').addEventListener('click', ()=>{
+      const names = properties.map(p=>p.name);
+      const idx = names.indexOf(state.property);
+      state.property = names[(idx+1) % names.length];
+      el('propToggle').textContent = state.property;
+      showToast(`Property set to ${state.property} (demo).`);
+      render();
+    });
+
+    el('brandBtn').addEventListener('click', ()=>navigate('dashboard'));
+
+    // Close controls
+    el('drawerClose').addEventListener('click', closeDrawer);
+    el('modalClose').addEventListener('click', closeModal);
+    el('toastClose').addEventListener('click', ()=>toast.classList.remove('show'));
+
+    backdrop.addEventListener('click', ()=>{
+      // If modal open, close modal first; else close drawer
+      if(modal.classList.contains('show')) closeModal();
+      else closeDrawer();
+    });
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){
+        closeModal();
+        closeDrawer();
+      }
+    });
+
+    // --- Init ---
+    buildTabs();
+    state.page = initFromHash();
+    render();
+
+    window.addEventListener('hashchange', ()=>{
+      const p = initFromHash();
+      if(p !== state.page){
+        state.page = p;
+        render();
+      }
+    });
+  </script>
+</body>
+</html>
