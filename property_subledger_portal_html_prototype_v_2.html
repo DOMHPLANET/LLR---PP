@@ -279,39 +279,39 @@
     // --- Sample data (matches provided data model) ---
     const properties = [
       {id:'all', name:'All'},
-      {id:'IBIS-LON', name:'Ibis London'},
-      {id:'SCANDIC-BER', name:'Scandic Berlin'},
-      {id:'CP-PAR', name:'Crowne Plaza Paris'},
-      {id:'HI-ROM', name:'Holiday Inn Rome'},
+      {id:'Raddison-LON', name:'Raddison London'},
+      {id:'Raddison-BER', name:'Raddison Berlin'},
+      {id:'CP-PAR', name:'Raddison Blue Paris'},
+      {id:'HI-ROM', name:'Raddison Rome'},
     ];
 
     const transactions = [
       // Payments
-      tx({id:'TRX123456789', created_at:'2026-03-02T14:30:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:325.40, fees_total:6.42, net_amount:318.98, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:'PO-8472910', brand_channel:'Brand.com', property_id:'IBIS-LON'}),
+      tx({id:'TRX123456789', created_at:'2026-03-02T14:30:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:325.40, fees_total:6.42, net_amount:318.98, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:'PO-8472910', brand_channel:'Brand.com', property_id:'Raddison-LON'}),
       tx({id:'TRX123456776', created_at:'2026-03-02T11:10:00Z', type:'payment', status:'pending', currency:'USD', gross_amount:228.50, fees_total:0.00, net_amount:228.50, payment_method:'Visa •••• 1111', reservation_id:'RES-884215', guest_name:'Ava R***', stay_start_date:'2026-03-20', stay_end_date:'2026-03-22', payout_id:null, brand_channel:'Call Centre', property_id:'CP-PAR'}),
-      tx({id:'TRX123767865', created_at:'2026-03-01T09:45:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:79.90, fees_total:1.82, net_amount:78.08, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472909', brand_channel:'OTA', property_id:'SCANDIC-BER'}),
-      tx({id:'TRX124587210', created_at:'2026-03-01T08:00:00Z', type:'payment', status:'pending', currency:'USD', gross_amount:522.00, fees_total:0.00, net_amount:522.00, payment_method:'Amex •••• 1005', reservation_id:'RES-884000', guest_name:'Sam K***', stay_start_date:'2026-03-05', stay_end_date:'2026-03-06', payout_id:null, brand_channel:'Brand.com', property_id:'IBIS-LON'}),
+      tx({id:'TRX123767865', created_at:'2026-03-01T09:45:00Z', type:'payment', status:'paid', currency:'USD', gross_amount:79.90, fees_total:1.82, net_amount:78.08, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472909', brand_channel:'OTA', property_id:'Raddison-BER'}),
+      tx({id:'TRX124587210', created_at:'2026-03-01T08:00:00Z', type:'payment', status:'pending', currency:'USD', gross_amount:522.00, fees_total:0.00, net_amount:522.00, payment_method:'Amex •••• 1005', reservation_id:'RES-884000', guest_name:'Sam K***', stay_start_date:'2026-03-05', stay_end_date:'2026-03-06', payout_id:null, brand_channel:'Brand.com', property_id:'Raddison-LON'}),
 
       // Refunds
-      tx({id:'RFD-99812', created_at:'2026-03-01T10:05:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-79.90, fees_total:0.00, net_amount:-79.90, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472910', brand_channel:null, property_id:'SCANDIC-BER', refund_initiator:'Property', refund_reason:'Customer request'}),
-      tx({id:'RFD-99811', created_at:'2026-02-28T23:10:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-450.00, fees_total:0.00, net_amount:-450.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883850', guest_name:'Zoe L***', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'IBIS-LON', refund_initiator:'Brand', refund_reason:'Cancellation'}),
+      tx({id:'RFD-99812', created_at:'2026-03-01T10:05:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-79.90, fees_total:0.00, net_amount:-79.90, payment_method:'Mastercard •••• 8888', reservation_id:'RES-883990', guest_name:'Mia S***', stay_start_date:'2026-02-25', stay_end_date:'2026-02-26', payout_id:'PO-8472910', brand_channel:null, property_id:'Raddison-BER', refund_initiator:'Property', refund_reason:'Customer request'}),
+      tx({id:'RFD-99811', created_at:'2026-02-28T23:10:00Z', type:'refund', status:'refunded', currency:'USD', gross_amount:-450.00, fees_total:0.00, net_amount:-450.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883850', guest_name:'Zoe L***', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'Raddison-LON', refund_initiator:'Brand', refund_reason:'Cancellation'}),
 
       // Disputes
-      tx({id:'CBK-55421', created_at:'2026-03-01T08:00:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-1500.00, fees_total:25.00, net_amount:-1525.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883700', guest_name:'Liam P***', stay_start_date:'2026-02-12', stay_end_date:'2026-02-14', payout_id:null, brand_channel:null, property_id:'IBIS-LON'}),
-      tx({id:'CBK-60011', created_at:'2026-02-27T15:20:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-189.00, fees_total:25.00, net_amount:-214.00, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:null, brand_channel:null, property_id:'IBIS-LON'}),
+      tx({id:'CBK-55421', created_at:'2026-03-01T08:00:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-1500.00, fees_total:25.00, net_amount:-1525.00, payment_method:'Visa •••• 4242', reservation_id:'RES-883700', guest_name:'Liam P***', stay_start_date:'2026-02-12', stay_end_date:'2026-02-14', payout_id:null, brand_channel:null, property_id:'Raddison-LON'}),
+      tx({id:'CBK-60011', created_at:'2026-02-27T15:20:00Z', type:'dispute', status:'disputed', currency:'USD', gross_amount:-189.00, fees_total:25.00, net_amount:-214.00, payment_method:'Visa •••• 4242', reservation_id:'RES-884201', guest_name:'John M***', stay_start_date:'2026-03-12', stay_end_date:'2026-03-14', payout_id:null, brand_channel:null, property_id:'Raddison-LON'}),
 
       // Adjustments
       tx({id:'ADJ-7712', created_at:'2026-03-02T09:15:00Z', type:'adjustment', status:'paid', currency:'USD', gross_amount:-12.00, fees_total:0.00, net_amount:-12.00, payment_method:'—', reservation_id:'RES-883500', guest_name:'Batch adj.', stay_start_date:'2026-02-28', stay_end_date:'2026-02-28', payout_id:'PO-8472910', brand_channel:null, property_id:'CP-PAR', adjustment_reason:'Manual correction'}),
-      tx({id:'ADJ-9091', created_at:'2026-02-26T16:45:00Z', type:'adjustment', status:'paid', currency:'USD', gross_amount:15.00, fees_total:0.00, net_amount:15.00, payment_method:'—', reservation_id:'RES-883850', guest_name:'Fee refund', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'IBIS-LON', adjustment_reason:'Fee reversal'}),
+      tx({id:'ADJ-9091', created_at:'2026-02-26T16:45:00Z', type:'adjustment', status:'paid', currency:'USD', gross_amount:15.00, fees_total:0.00, net_amount:15.00, payment_method:'—', reservation_id:'RES-883850', guest_name:'Fee refund', stay_start_date:'2026-03-02', stay_end_date:'2026-03-04', payout_id:'PO-8472909', brand_channel:null, property_id:'Raddison-LON', adjustment_reason:'Fee reversal'}),
 
       // EUR sample
       tx({id:'TRX-EU-998100', created_at:'2026-03-01T12:11:00Z', type:'payment', status:'paid', currency:'EUR', gross_amount:189.00, fees_total:3.98, net_amount:185.02, payment_method:'Visa •••• 4242', reservation_id:'RES-990100', guest_name:'J*** D***', stay_start_date:'2026-03-10', stay_end_date:'2026-03-12', payout_id:'PO-EUR-10021', brand_channel:'Brand.com', property_id:'HI-ROM'}),
     ];
 
     const payouts = [
-      payout({id:'PO-8472910', payout_date:'2026-03-04', currency:'USD', gross_collected:125000.00, refunds_total:2950.00, chargebacks_total:1500.00, fees_total:3200.00, adjustments_total:-500.00, net_payout:124500.00, status:'upcoming', title:'Payout for 1–3 Mar stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3301'}),
-      payout({id:'PO-8472909', payout_date:'2026-02-28', currency:'USD', gross_collected:85000.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:0.00, net_payout:85000.00, status:'paid', title:'Payout for 24–28 Feb stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3290'}),
-      payout({id:'PO-8472850', payout_date:'2026-02-26', currency:'USD', gross_collected:42500.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:-2500.00, net_payout:40000.00, status:'failed', title:'Payout for 20–23 Feb stays', property_id:'IBIS-LON', bank_ref:'BNK-REF-3277'}),
+      payout({id:'PO-8472910', payout_date:'2026-03-04', currency:'USD', gross_collected:125000.00, refunds_total:2950.00, chargebacks_total:1500.00, fees_total:3200.00, adjustments_total:-500.00, net_payout:124500.00, status:'upcoming', title:'Payout for 1–3 Mar stays', property_id:'Raddison-LON', bank_ref:'BNK-REF-3301'}),
+      payout({id:'PO-8472909', payout_date:'2026-02-28', currency:'USD', gross_collected:85000.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:0.00, net_payout:85000.00, status:'paid', title:'Payout for 24–28 Feb stays', property_id:'Raddison-LON', bank_ref:'BNK-REF-3290'}),
+      payout({id:'PO-8472850', payout_date:'2026-02-26', currency:'USD', gross_collected:42500.00, refunds_total:0.00, chargebacks_total:0.00, fees_total:0.00, adjustments_total:-2500.00, net_payout:40000.00, status:'failed', title:'Payout for 20–23 Feb stays', property_id:'Raddison-LON', bank_ref:'BNK-REF-3277'}),
       payout({id:'PO-ONHOLD-1002', payout_date:'2026-03-06', currency:'USD', gross_collected:22000.00, refunds_total:0.00, chargebacks_total:189.00, fees_total:420.00, adjustments_total:0.00, net_payout:21391.00, status:'on_hold', title:'Payout for 2–5 Mar stays', property_id:'CP-PAR', bank_ref:'—'}),
 
       payout({id:'PO-EUR-10021', payout_date:'2026-03-02', currency:'EUR', gross_collected:400359.00, refunds_total:1200.00, chargebacks_total:900.00, fees_total:10421.00, adjustments_total:0.00, net_payout:400359.00, status:'paid', title:'Payout for 28 Feb–1 Mar stays', property_id:'HI-ROM', bank_ref:'SEPA-REF-3301'}),
@@ -1442,7 +1442,7 @@
               </div>
               <div style="padding:14px">
                 <div class="controls">
-                  <div class="field"><label>Account name</label><input id="bankName" value="Ibis London Ltd" /></div>
+                  <div class="field"><label>Account name</label><input id="bankName" value="Raddison London Ltd" /></div>
                   <div class="field"><label>IBAN</label><input id="bankIban" value="GB** **** **** **** 4455" /></div>
                   <div class="field"><label>Bank / clearing code</label><input id="bankSort" value="20-00-00" /></div>
                 </div>
@@ -2009,7 +2009,7 @@
       render();
     });
 
-    // Property toggle: All -> Ibis -> Scandic -> Crowne -> Holiday Inn -> All
+    // Property toggle: All -> Raddison -> Raddison -> Crowne -> Raddison -> All
     el('propToggle').addEventListener('click', ()=>{
       const names = properties.map(p=>p.name);
       const idx = names.indexOf(state.property);
